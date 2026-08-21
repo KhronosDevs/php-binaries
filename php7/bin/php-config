@@ -1,26 +1,26 @@
 #! /bin/sh
 
 SED="/bin/sed"
-prefix="/usr"
-datarootdir="/usr/share"
+prefix="/build/dist/php7"
+datarootdir="/build/dist/php7/php"
 exec_prefix="${prefix}"
-version="8.2.32"
-vernum="80232"
-include_dir="${prefix}/include/php82"
+version="8.2.34-dev"
+vernum="80234"
+include_dir="${prefix}/include/php"
 includes="-I$include_dir -I$include_dir/main -I$include_dir/TSRM -I$include_dir/Zend -I$include_dir/ext -I$include_dir/ext/date/lib"
-ldflags=""
-libs="  -lncurses -lrt -lstdc++ -lrt -lm -lacl  -lsystemd -lpthread -lxml2 -lpcre2-8 -lz -ledit -largon2 -lrt -ldl "
-extension_dir='/usr/lib/php82/modules'
-man_dir=`eval echo /usr/share/man`
+ldflags=" -L/build/work/deps/lib -L/build/work/deps/lib/../lib"
+libs="  -lresolv -lrt -lgmp -lutil -lrt -lm -ldl  -lpthread -lssl -lcrypto -lsqlite3 -lz -lcurl -lssl -lcrypto -lssl -lcrypto -lz -lssl -lcrypto -lz -ldl -lpthread -lz -lssl -lcrypto -lssl -lcrypto -lffi -lonig -lsqlite3 -lzip -lz -lssl -lcrypto "
+extension_dir='/build/dist/php7/lib/php/extensions/no-debug-zts-20220829'
+man_dir=`eval echo ${datarootdir}/man`
 program_prefix=""
-program_suffix="82"
+program_suffix=""
 exe_extension=""
 php_cli_binary=NONE
 php_cgi_binary=NONE
-configure_options=" '--prefix=/usr' '--sbindir=/usr/bin' '--localstatedir=/var' '--with-layout=GNU' '--disable-debug' '--mandir=/usr/share/man' '--srcdir=../php-8.2.32' '--libdir=/usr/lib/php82' '--datadir=/usr/share/php82' '--program-suffix=82' '--with-config-file-scan-dir=/etc/php82/conf.d' '--enable-filter' '--enable-session' '--with-pear' '--with-mhash=/usr' '--with-kerberos' '--with-mysql-sock=/run/mysqld/mysqld.sock' '--enable-mysqlnd-compression-support' '--datarootdir=/usr/share/php82' '--with-zlib' '--with-libxml' '--with-pcre-jit' '--with-external-pcre=/usr' '--with-password-argon2=/usr' '--disable-rpath' '--config-cache' '--with-system-tzdata' '--enable-phpdbg-readline' '--with-libedit' '--enable-zts' '--sysconfdir=/etc/php82' '--with-config-file-path=/etc/php82' '--enable-cli' '--enable-xml=shared' '--with-xsl=shared' '--enable-xmlreader=shared' '--enable-xmlwriter=shared' '--enable-dom=shared' '--enable-simplexml=shared' '--with-openssl=shared' '--enable-pdo=shared' '--enable-mysqlnd=shared' '--with-mysqli=shared,mysqlnd' '--with-pdo-mysql=shared,mysqlnd' '--enable-phar=shared' '--enable-pcntl=shared' '--enable-posix=shared' '--enable-shmop=shared' '--enable-sockets=shared' '--enable-sysvmsg=shared' '--enable-sysvsem=shared' '--enable-sysvshm=shared' '--enable-tokenizer=shared' '--enable-dba=shared' '--with-db4=/usr' '--without-gdbm' '--with-cdb' '--with-lmdb=/usr' '--with-pgsql=shared,/usr' '--with-pdo-pgsql=shared,/usr' '--with-unixODBC=shared' '--with-pdo-odbc=shared,unixODBC,/usr' '--with-pdo-firebird=shared,/usr' '--with-pdo-dblib=shared,/usr' '--with-pdo-sqlite=shared,/usr' '--with-sqlite3=shared' '--enable-gd=shared' '--with-external-gd=/usr' '--with-jpeg' '--with-xpm' '--with-webp' '--with-freetype' '--enable-exif=shared' '--with-tidy=shared,/usr' '--with-iconv=shared' '--enable-bcmath=shared' '--with-gmp=shared,/usr' '--with-zip=shared' '--with-bz2=shared,/usr' '--enable-fileinfo=shared' '--enable-ctype=shared' '--enable-mbstring=shared' '--with-onig=/usr' '--enable-mbregex' '--with-pspell=shared,/usr' '--with-enchant=shared' '--enable-intl=shared' '--enable-calendar=shared' '--with-gettext=shared,/usr' '--enable-soap=shared' '--enable-ftp=shared' '--with-curl=shared' '--with-snmp=shared,/usr' '--with-ldap=shared,/usr' '--with-ldap-sasl' '--with-sodium=shared' '--with-ffi=shared' '--enable-opcache' '--enable-huge-code-pages' '--enable-phpdbg' '--enable-cgi' '--enable-embed=shared' '--enable-fpm' '--with-fpm-user=http' '--with-fpm-group=http' '--with-fpm-systemd' '--with-fpm-acl' '--enable-litespeed' 'CFLAGS=-march=x86-64 -mtune=generic -O2 -pipe -fno-plt -fexceptions -Wp,-D_FORTIFY_SOURCE=3 -Wformat -Werror=format-security -fstack-clash-protection -fcf-protection -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -g -ffile-prefix-map=/build/php-82/src=/usr/src/debug/php82 -fPIC -Wno-error=incompatible-pointer-types' 'LDFLAGS=-Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,-z,pack-relative-relocs' 'CPPFLAGS= -DU_USING_ICU_NAMESPACE=1 ' 'CXXFLAGS=-march=x86-64 -mtune=generic -O2 -pipe -fno-plt -fexceptions -Wp,-D_FORTIFY_SOURCE=3 -Wformat -Werror=format-security -fstack-clash-protection -fcf-protection -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -Wp,-D_GLIBCXX_ASSERTIONS -g -ffile-prefix-map=/build/php-82/src=/usr/src/debug/php82 -fPIC -Wno-error=incompatible-pointer-types -std=c++17'"
-php_sapis=" cli embed fpm litespeed phpdbg cgi"
-ini_dir="/etc/php82/conf.d"
-ini_path="/etc/php82"
+configure_options=" '--prefix=/build/dist/php7' '--disable-all' '--enable-cli' '--disable-cgi' '--enable-zts' '--enable-ffi' '--enable-sockets' '--enable-pmmpthread' '--enable-yaml' '--with-libyaml=/build/work/deps' '--with-curl=/build/work/deps' '--with-openssl=/build/work/deps' '--enable-mbstring' '--with-onig=/build/work/deps' '--with-gmp=/build/work/deps' '--with-zlib=/build/work/deps' '--enable-phar' '--with-zip=/build/work/deps' '--with-ffi=/build/work/deps' '--enable-bcmath' '--enable-ctype' '--with-sqlite3=/build/work/deps' '--enable-pdo' '--with-pdo-sqlite=/build/work/deps' '--enable-mysqlnd' '--with-mysqli=mysqlnd' '--with-pdo-mysql=mysqlnd' '--enable-opcache' 'PKG_CONFIG_PATH=/build/work/deps/lib/pkgconfig' 'PKG_CONFIG_LIBDIR=/build/work/deps/lib/pkgconfig'"
+php_sapis=" cli phpdbg"
+ini_dir=""
+ini_path="/build/dist/php7/lib"
 
 # Set php_cli_binary and php_cgi_binary if available
 for sapi in $php_sapis; do
