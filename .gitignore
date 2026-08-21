@@ -19,6 +19,7 @@ ext-pmmpthread/
 *.a
 *.so
 *.so.*
+bin.zip
 Makefile
 config.log
 config.status

@@ -6,4 +6,5 @@ exec "$DIR/php-bin" \
   -n \
   -c "$DIR/php.ini" \
   -d "extension_dir=$DIR/../lib/modules" \
+  -d "zend_extension=$DIR/../lib/php/extensions/no-debug-zts-20220829/opcache.so" \
   "$@"
