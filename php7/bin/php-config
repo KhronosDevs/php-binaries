@@ -9,7 +9,7 @@ vernum="80234"
 include_dir="${prefix}/include/php"
 includes="-I$include_dir -I$include_dir/main -I$include_dir/TSRM -I$include_dir/Zend -I$include_dir/ext -I$include_dir/ext/date/lib"
 ldflags=" -L/build/work/deps/lib -L/build/work/deps/lib/../lib"
-libs="  -lresolv -lrt -lgmp -lutil -lrt -lm -ldl  -lpthread -lssl -lcrypto -lsqlite3 -lz -lcurl -lssl -lcrypto -lssl -lcrypto -lz -lssl -lcrypto -lz -ldl -lpthread -lz -lssl -lcrypto -lssl -lcrypto -lffi -lonig -lsqlite3 -lzip -lz -lssl -lcrypto "
+libs="  -lyaml -lresolv -lrt -lgmp -lutil -lrt -lm -ldl  -lpthread -lssl -lcrypto -lsqlite3 -lz -lcurl -lssl -lcrypto -lssl -lcrypto -lz -lssl -lcrypto -lz -ldl -lpthread -lz -lssl -lcrypto -lssl -lcrypto -lffi -lonig -lsqlite3 -lzip -lz -lssl -lcrypto "
 extension_dir='/build/dist/php7/lib/php/extensions/no-debug-zts-20220829'
 man_dir=`eval echo ${datarootdir}/man`
 program_prefix=""
@@ -17,7 +17,7 @@ program_suffix=""
 exe_extension=""
 php_cli_binary=NONE
 php_cgi_binary=NONE
-configure_options=" '--prefix=/build/dist/php7' '--disable-all' '--enable-cli' '--disable-cgi' '--enable-zts' '--enable-ffi' '--enable-sockets' '--enable-pmmpthread' '--enable-yaml' '--with-libyaml=/build/work/deps' '--with-curl=/build/work/deps' '--with-openssl=/build/work/deps' '--enable-mbstring' '--with-onig=/build/work/deps' '--with-gmp=/build/work/deps' '--with-zlib=/build/work/deps' '--enable-phar' '--with-zip=/build/work/deps' '--with-ffi=/build/work/deps' '--enable-bcmath' '--enable-ctype' '--with-sqlite3=/build/work/deps' '--enable-pdo' '--with-pdo-sqlite=/build/work/deps' '--enable-mysqlnd' '--with-mysqli=mysqlnd' '--with-pdo-mysql=mysqlnd' '--enable-opcache' 'PKG_CONFIG_PATH=/build/work/deps/lib/pkgconfig' 'PKG_CONFIG_LIBDIR=/build/work/deps/lib/pkgconfig'"
+configure_options=" '--prefix=/build/dist/php7' '--disable-all' '--enable-cli' '--disable-cgi' '--enable-zts' '--enable-ffi' '--enable-sockets' '--enable-pmmpthread' '--with-yaml=/build/work/deps' '--with-curl=/build/work/deps' '--with-openssl=/build/work/deps' '--enable-mbstring' '--with-onig=/build/work/deps' '--with-gmp=/build/work/deps' '--with-zlib=/build/work/deps' '--enable-phar' '--with-zip=/build/work/deps' '--with-ffi=/build/work/deps' '--enable-bcmath' '--enable-ctype' '--with-sqlite3=/build/work/deps' '--enable-pdo' '--with-pdo-sqlite=/build/work/deps' '--enable-mysqlnd' '--with-mysqli=mysqlnd' '--with-pdo-mysql=mysqlnd' '--enable-opcache' 'PKG_CONFIG_PATH=/build/work/deps/lib/pkgconfig' 'PKG_CONFIG_LIBDIR=/build/work/deps/lib/pkgconfig'"
 php_sapis=" cli phpdbg"
 ini_dir=""
 ini_path="/build/dist/php7/lib"

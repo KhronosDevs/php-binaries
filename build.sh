@@ -563,6 +563,19 @@ git clone \
     ext-pmmpthread
 
 # ---------------------------------------------------------------------------
+# 9b. ext-yaml (PECL, not bundled in php-src core)
+# ---------------------------------------------------------------------------
+
+log "Fetching ext-yaml (PECL)"
+
+rm -rf ext-yaml
+
+git clone \
+    --depth 1 \
+    https://github.com/php/pecl-file_formats-yaml.git \
+    ext-yaml
+
+# ---------------------------------------------------------------------------
 # 10. PHP source
 # ---------------------------------------------------------------------------
 
@@ -576,6 +589,7 @@ git clone \
     https://github.com/php/php-src.git
 
 cp -r ext-pmmpthread php-src/ext/pmmpthread
+cp -r ext-yaml php-src/ext/yaml
 
 cd php-src
 
@@ -614,8 +628,7 @@ export LDFLAGS="-L$DEPS_PREFIX/lib"
     --enable-sockets \
     --enable-pmmpthread \
     \
-    --enable-yaml \
-    --with-libyaml="$DEPS_PREFIX" \
+    --with-yaml="$DEPS_PREFIX" \
     \
     --with-curl="$DEPS_PREFIX" \
     --with-openssl="$DEPS_PREFIX" \
