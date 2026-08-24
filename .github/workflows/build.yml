@@ -36,13 +36,13 @@ jobs:
 
       - name: Download compilation script
         run: |
-          curl -L -o windows-compile-vs.bat https://raw.githubusercontent.com/pmmp/php-build-scripts/master/windows-compile-vs.bat
-        shell: cmd
+          curl -L -o windows-compile-vs.ps1 https://raw.githubusercontent.com/pmmp/PHP-Binaries/refs/heads/stable/windows-compile-vs.ps1
+        shell: powershell
 
       - name: Compile php for windows
         run: |
-          call windows-compile-vs.bat
-        shell: cmd
+          call .\windows-compile-vs.ps1
+        shell: powershell
 
       - name: Adapt and set INI's files of KhronosDevs for Windows
         shell: powershell
