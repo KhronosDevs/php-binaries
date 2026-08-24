@@ -1,0 +1,87 @@
+name: Compile KhronosDevs PHP Binaries
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    name: Compile Linux (Ubuntu)
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Execute KhronosDevs script
+        run: |
+          chmod +x build.sh
+          ./build.sh
+          cp php.ini bin/php7/bin/php.ini
+          cp php-production.ini bin/php7/bin/php.ini-production
+          cp php-development.ini bin/php7/bin/php.ini-development
+
+      - name: Upload linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PHP-8.2-Linux-x64
+          path: bin/php7/
+
+  build-windows:
+    name: Compile Windows (VS 2022)
+    runs-on: windows-2022
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Download compilation script
+        run: |
+          curl -L -o windows-compile-vs.bat https://raw.githubusercontent.com/pmmp/php-build-scripts/master/windows-compile-vs.bat
+        shell: cmd
+
+      - name: Compile php for windows
+        run: |
+          call windows-compile-vs.bat
+        shell: cmd
+
+      - name: Adapt and set INI's files of KhronosDevs for Windows
+        shell: powershell
+        run: |
+          $binFolder = "bin\php"
+          
+          $iniFiles = @("php.ini", "php-production.ini", "php-development.ini")
+          
+          $dlls = @"
+          
+          extension=php_bz2.dll
+          extension=php_com_dotnet.dll
+          extension=php_curl.dll
+          extension=php_ffi.dll
+          extension=php_gmp.dll
+          extension=php_igbinary.dll
+          extension=php_mbstring.dll
+          extension=php_openssl.dll
+          extension=php_pmmpthread.dll
+          extension=php_sockets.dll
+          extension=php_sodium.dll
+          extension=php_sqlite3.dll
+          extension=php_yaml.dll
+          extension=php_zlib.dll
+          zend_extension=php_opcache.dll
+          "@
+
+          foreach ($file in $iniFiles) {
+              if (Test-Path $file) {
+                  $content = Get-Content $file -Raw
+                  $content = $content -replace 'extension_dir = "../lib/modules"', 'extension_dir = "ext"'
+                  $content = $content + "`n" + $dlls
+                  $destName = $file.Replace("-production", ".ini-production").Replace("-development", ".ini-development")
+                  Set-Content -Path "$binFolder\$destName" -Value $content
+              }
+          }
+
+      - name: Upload windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PHP-8.2-Windows-x64
+          path: bin/php/
