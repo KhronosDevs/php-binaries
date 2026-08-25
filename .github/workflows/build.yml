@@ -36,9 +36,11 @@ jobs:
 
       - name: Download compilation script
         run: |
-          curl -L -o windows-compile-vs.ps1 https://raw.githubusercontent.com/pmmp/PHP-Binaries/refs/heads/stable/windows-compile-vs.ps1
+          $url = "https://raw.githubusercontent.com/pmmp/PHP-Binaries/refs/heads/stable/windows-compile-vs.ps1"
+          $output = "windows-compile-vs.ps1"
+          Invoke-WebRequest -Uri $url -OutFile $output -MaximumRedirection 10
         shell: powershell
-
+        
       - name: Compile php for windows
         run: |
           call .\windows-compile-vs.ps1
