@@ -43,7 +43,7 @@ jobs:
         
       - name: Compile php for windows
         run: |
-          call .\windows-compile-vs.ps1
+          .\windows-compile-vs.ps1
         shell: powershell
 
       - name: Adapt and set INI's files of KhronosDevs for Windows
