@@ -42,6 +42,8 @@ jobs:
         shell: powershell
         
       - name: Compile php for windows
+        env:
+          PM_VERSION_MAJOR: 5
         run: |
           .\windows-compile-vs.ps1
         shell: powershell
