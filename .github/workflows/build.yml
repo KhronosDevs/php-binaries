@@ -2,7 +2,7 @@ name: Compile Khronos PHP Binaries
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, fix/windows-compile-script ]
   workflow_dispatch:
 
 jobs:
