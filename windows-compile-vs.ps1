@@ -16,7 +16,9 @@ $ProgressPreference="SilentlyContinue"
 #     - ext-pmmpthread cloned from branch "fork" (build.sh does the same,
 #       PMMPTHREAD_BRANCH=fork; the pmmp script used the 6.3.0 release zip).
 #     - ext-yaml cloned from git master (build.sh does the same).
-#     - FFI compiled (--enable-ffi=shared). build.sh compiles it on Linux and
+#     - FFI compiled (--with-ffi=shared; on Windows FFI is ARG_WITH in
+#       ext/ffi/config.w32, so --enable-ffi is silently ignored by configure).
+#       build.sh compiles it on Linux and
 #       both start.cmd and start.ps1 pass "-d extension=ffi -d ffi.enable=1",
 #       while the shipped php.ini has ffi.enable=true. The pmmp script does
 #       NOT compile FFI, which is the core functional break of the old job.
@@ -390,6 +392,30 @@ function download-php {
     write-extracting
     unzip-file $file $pwd
     Move-Item "php-src-$PHP_GIT_REV" $SOURCES_PATH >> $log_file 2>&1
+
+    #PATCH: the php-8.2.30 tag's ext/curl/config.w32 predates the brotli
+    #link fix that was later added on the PHP-8.2 branch. The php-sdk deps
+    #catalog (libcurl >= 8.x) is built WITH brotli, so without this block
+    #php8ts.dll fails to link with LNK2019/LNK2001 unresolved BrotliDecoder*
+    #symbols. This mirrors the block found in the PHP-8.2 branch HEAD.
+    $curlConfig = "$SOURCES_PATH\ext\curl\config.w32"
+    if (-not (Select-String -Path $curlConfig -Pattern "brotli" -Quiet)) {
+        kh-echo "Patching ext/curl/config.w32 to link brotli libs (missing in php-8.2.30 tag)"
+        $content = Get-Content $curlConfig -Raw
+        $anchor = 'EXTENSION("curl", "interface.c multi.c share.c curl_file.c");'
+        $brotli = @'
+		if (!(CHECK_HEADER_ADD_INCLUDE("brotli/decode.h", "CFLAGS_CURL") &&
+			CHECK_LIB("brotlidec.lib;brotlidec-static.lib", "curl", PHP_CURL) &&
+			CHECK_LIB("brotlicommon.lib;brotlicommon-static.lib", "curl", PHP_CURL)
+		)) {
+			WARNING("brotli in curl not enabled; libraries or headers not found");
+		}
+
+'@
+        $content = $content.Replace($anchor, $brotli + $anchor)
+        Set-Content -Path $curlConfig -Value $content -Encoding ASCII -NoNewline
+        Add-Content $log_file "[Khronos] ext/curl/config.w32 patched with brotli link block"
+    }
     write-done
 }
 
@@ -443,8 +469,11 @@ write-configure
 #   zlib, phar, zip, bcmath, ctype, sqlite3, pdo, pdo-sqlite, mysqlnd,
 #   mysqli, pdo-mysql, opcache.
 # Windows specifics:
-#   - ffi/openssl/sqlite3/pmmpthread are shared (DLL); on Linux they are
-#     static. The generated php.ini loads them, so runtime parity holds.
+#   - ffi/mysqli/openssl/sqlite3/pmmpthread are shared (DLL); on Linux they
+#     are static. The generated php.ini loads them, so runtime parity holds.
+#   - mysqlnd is passed as --with-mysqlnd: in ext/mysqlnd/config.w32 it is
+#     ARG_WITH, so --enable-mysqlnd is ignored ("invalid argument") and the
+#     mysqli/pdo_mysql objects fail to link (LNK2019 mysqlnd_* symbols).
 #   - gmp resolves through the mpir package of the php-sdk deps (vs16).
 #   - libffi and libzip are part of the php-sdk deps catalog.
 sdk-command "buildconf.bat"
@@ -459,9 +488,9 @@ sdk-command "configure^`
     --enable-zts^`
     --enable-bcmath^`
     --enable-ctype^`
-    --enable-ffi=shared^`
+    --with-ffi=shared^`
     --enable-mbstring^`
-    --enable-mysqlnd^`
+    --with-mysqlnd^`
     --enable-opcache^`
     --enable-opcache-jit=$PHP_JIT_ENABLE_ARG^`
     --enable-pdo^`
@@ -472,7 +501,7 @@ sdk-command "configure^`
     --with-curl^`
     --with-gmp^`
     --with-iconv^`
-    --with-mysqli^`
+    --with-mysqli=shared^`
     --with-openssl^`
     --with-pcre-jit^`
     --with-pdo-mysql^`
