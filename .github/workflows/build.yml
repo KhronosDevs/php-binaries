@@ -2,7 +2,7 @@ name: Compile Khronos PHP Binaries
 
 on:
   push:
-    branches: [ master, fix/windows-compile-script ]
+    branches: [ master ]
   workflow_dispatch:
 
 jobs:
@@ -18,9 +18,11 @@ jobs:
         run: |
           chmod +x build.sh
           ./build.sh
-          cp php.ini dist/php7/bin/php.ini
-          cp php-production.ini dist/php7/bin/php.ini-production
-          cp php-development.ini dist/php7/bin/php.ini-development
+          # build.sh runs in Docker as root, so dist/php7/ is root-owned:
+          # copy the ini files with sudo or cp fails with Permission denied.
+          sudo cp php.ini dist/php7/bin/php.ini
+          sudo cp php-production.ini dist/php7/bin/php.ini-production
+          sudo cp php-development.ini dist/php7/bin/php.ini-development
 
       - name: Smoke test (Linux)
         run: |
@@ -70,11 +72,15 @@ jobs:
       # artifact and start.cmd) and already runs its own smoke test
       # (php -v, extension check, ZTS). This step validates the layout from
       # the server root, exactly like start.cmd does.
+      # Note: no -d extension=ffi here: the generated php.ini already loads
+      # every shared DLL (including php_ffi.dll), and loading it twice
+      # triggers "Module FFI is already loaded". PHP code needs && (not the
+      # PowerShell -and operator).
       - name: Smoke test (Windows, from server root)
         run: |
           $php = "bin\php7\bin\php.exe"
           if (-not (Test-Path $php)) { Write-Host "php.exe not found at $php"; exit 1 }
-          & $php -d extension=ffi -d ffi.enable=1 -r "exit((class_exists('FFI') -and class_exists('Thread')) ? 0 : 1);"
+          & $php -r "exit((class_exists('FFI') && class_exists('Thread')) ? 0 : 1);"
           if ($LASTEXITCODE -ne 0) { Write-Host "FFI or pmmpthread not usable"; exit 1 }
         shell: powershell
 
