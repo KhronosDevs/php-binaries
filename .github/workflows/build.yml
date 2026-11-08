@@ -1,8 +1,8 @@
-name: Compile KhronosDevs PHP Binaries
+name: Compile Khronos PHP Binaries
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, fix/windows-compile-script ]
   workflow_dispatch:
 
 jobs:
@@ -13,79 +13,81 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v4
 
+      # build.sh outputs to dist/php7/ (docker build, Debian Bullseye baseline)
       - name: Execute KhronosDevs script
         run: |
           chmod +x build.sh
           ./build.sh
-          cp php.ini bin/php7/bin/php.ini
-          cp php-production.ini bin/php7/bin/php.ini-production
-          cp php-development.ini bin/php7/bin/php.ini-development
+          cp php.ini dist/php7/bin/php.ini
+          cp php-production.ini dist/php7/bin/php.ini-production
+          cp php-development.ini dist/php7/bin/php.ini-development
+
+      - name: Smoke test (Linux)
+        run: |
+          PHP=dist/php7/bin/php
+          "$PHP" -v
+          "$PHP" -m
+          "$PHP" -i | grep "Thread Safety => enabled"
+          for ext in FFI pmmpthread sockets mbstring yaml zlib json phar curl PDO sqlite3 mysqlnd; do
+            "$PHP" -m | grep -qx "$ext" || { echo "Missing extension: $ext"; exit 1; }
+          done
+          "$PHP" -m | grep -q "Zend OPcache"
 
       - name: Upload linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: PHP-8.2-Linux-x64
-          path: bin/php7/
+          path: dist/php7/
 
   build-windows:
     name: Compile Windows (VS 2022)
     runs-on: windows-2022
+    env:
+      # Khronos php.ini ships opcache.jit=tracing, so JIT support must be compiled in
+      PHP_JIT_SUPPORT: "1"
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
 
-      - name: Download compilation script
+      # Caches the php-sdk, the prebuilt deps (deps-php-8.2-release) and the
+      # custom lib build dir. The compile script reuses whatever exists.
+      - name: Cache PHP SDK and dependencies
+        uses: actions/cache@v4
+        with:
+          path: C:\pocketmine-php
+          key: php-sdk-deps-8.2-vs16-release-x64-v1
+          restore-keys: |
+            php-sdk-deps-8.2-vs16-release-x64-
+
+      # In-repo, versioned script: no downloads from third-party mutable
+      # branches. PHP version and extensions are pinned by the script itself
+      # (PHP 8.2.30, Khronos extension set, FFI included).
+      - name: Compile PHP for Windows (Khronos script)
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File .\windows-compile-vs.ps1
+        shell: pwsh
+
+      # The script installs to bin\php7\bin\php.exe (same layout as the Linux
+      # artifact and start.cmd) and already runs its own smoke test
+      # (php -v, extension check, ZTS). This step validates the layout from
+      # the server root, exactly like start.cmd does.
+      - name: Smoke test (Windows, from server root)
         run: |
-          $url = "https://raw.githubusercontent.com/pmmp/PHP-Binaries/refs/heads/stable/windows-compile-vs.ps1"
-          $output = "windows-compile-vs.ps1"
-          Invoke-WebRequest -Uri $url -OutFile $output -MaximumRedirection 10
-        shell: powershell
-        
-      - name: Compile php for windows
-        env:
-          PM_VERSION_MAJOR: 5
-        run: |
-          .\windows-compile-vs.ps1
+          $php = "bin\php7\bin\php.exe"
+          if (-not (Test-Path $php)) { Write-Host "php.exe not found at $php"; exit 1 }
+          & $php -d extension=ffi -d ffi.enable=1 -r "exit((class_exists('FFI') -and class_exists('Thread')) ? 0 : 1);"
+          if ($LASTEXITCODE -ne 0) { Write-Host "FFI or pmmpthread not usable"; exit 1 }
         shell: powershell
 
-      - name: Adapt and set INI's files of KhronosDevs for Windows
-        shell: powershell
-        run: |
-          $binFolder = "bin\php"
-          
-          $iniFiles = @("php.ini", "php-production.ini", "php-development.ini")
-          
-          $dlls = @"
-          
-          extension=php_bz2.dll
-          extension=php_com_dotnet.dll
-          extension=php_curl.dll
-          extension=php_ffi.dll
-          extension=php_gmp.dll
-          extension=php_igbinary.dll
-          extension=php_mbstring.dll
-          extension=php_openssl.dll
-          extension=php_pmmpthread.dll
-          extension=php_sockets.dll
-          extension=php_sodium.dll
-          extension=php_sqlite3.dll
-          extension=php_yaml.dll
-          extension=php_zlib.dll
-          zend_extension=php_opcache.dll
-          "@
-
-          foreach ($file in $iniFiles) {
-              if (Test-Path $file) {
-                  $content = Get-Content $file -Raw
-                  $content = $content -replace 'extension_dir = "../lib/modules"', 'extension_dir = "ext"'
-                  $content = $content + "`n" + $dlls
-                  $destName = $file.Replace("-production", ".ini-production").Replace("-development", ".ini-development")
-                  Set-Content -Path "$binFolder\$destName" -Value $content
-              }
-          }
+      - name: Upload compile log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-compile-log
+          path: compile.log
+          if-no-files-found: ignore
 
       - name: Upload windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: PHP-8.2-Windows-x64
-          path: bin/php/
+          path: bin/php7/

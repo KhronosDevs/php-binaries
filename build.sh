@@ -132,7 +132,18 @@ if [[ "${1:-}" == "--in-container" ]] && [[ -f /etc/debian_version ]]; then
 
     export DEBIAN_FRONTEND=noninteractive
 
-    apt-get update -qq
+    # Debian 11 (bullseye) reached end of LTS on 2026-08-31 and its pool
+    # moved to archive.debian.org: apt-get update still succeeds, but
+    # apt-get install fails with 404s on deb.debian.org.
+    # Keep the glibc 2.31 baseline (bookworm's glibc 2.36 would break
+    # Ubuntu 22.04 hosts).
+    echo "[build.sh] bullseye is EOL: using archive.debian.org"
+    cat > /etc/apt/sources.list <<'EOF'
+deb [check-valid-until=no] http://archive.debian.org/debian bullseye main
+deb [check-valid-until=no] http://archive.debian.org/debian-security bullseye-security main
+EOF
+    rm -rf /var/lib/apt/lists/*
+    apt-get -o Acquire::Check-Valid-Until=false update -qq
 
     apt-get install -y -qq \
         build-essential \
